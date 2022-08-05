@@ -77,17 +77,13 @@ low[u] = min(low[u], num[v]);
 
 ```cpp
 // C++ Version
-int low[MAXN], dfn[MAXN], iscut[MAXN], dfs_clock;
+int low[MAXN],dfn[MAXN],iscut[MAXN],dfs_clock;
 bool isbridge[MAXN];
 vector<int> G[MAXN];
 int cnt_bridge;
-int father[MAXN];
-
 void tarjan(int u, int fa) {
-  father[u] = fa;
   low[u] = dfn[u] = ++dfs_clock;
-  for (int i = 0; i < G[u].size(); i++) {
-    int v = G[u][i];
+  for (int v:G[u]) {//c++11
     if (!dfn[v]) {
       tarjan(v, u);
       low[u] = min(low[u], low[v]);
