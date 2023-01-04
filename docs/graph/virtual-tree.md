@@ -1,4 +1,4 @@
-author: HeRaNO, Ir1d, konnyakuxzy, ksyx, Xeonacid, konnyakuxzy, greyqz, sshwy
+author: HeRaNO, Ir1d, konnyakuxzy, ksyx, Xeonacid, konnyakuxzy, greyqz, sshwy,SmallTualatin
 
 ## 引入
 
@@ -98,6 +98,8 @@ author: HeRaNO, Ir1d, konnyakuxzy, ksyx, Xeonacid, konnyakuxzy, greyqz, sshwy
 - 遍历一遍，任意两个相邻的关键点求一下 LCA，并且哈希表判重；
 - 然后根据原树中的祖先后代关系建树。
 
+### 1.单调栈实现做法
+
 朴素算法的复杂度较高。因此我们提出一种单调栈做法。
 
 在提出方案之前，我们先确认一个事实——在虚树里，只要保证祖先后代的关系没有改变，就可以随意添加节点。
@@ -187,7 +189,7 @@ author: HeRaNO, Ir1d, konnyakuxzy, ksyx, Xeonacid, konnyakuxzy, greyqz, sshwy
 
 其中有很多细节，比如我是用邻接表存图的方式存虚树的，所以需要清空邻接表。但是直接清空整个邻接表是很慢的，所以我们在 **有一个从未入栈的元素入栈的时候清空该元素对应的邻接表** 即可。
 
-### 实现
+### 单调栈实现
 
 建立虚树的 C++ 代码大概长这样：
 
@@ -229,6 +231,54 @@ author: HeRaNO, Ir1d, konnyakuxzy, ksyx, Xeonacid, konnyakuxzy, greyqz, sshwy
     ```
 
 于是我们就学会了虚树的建立了！
+
+### 排序实现
+
+虚树建立：
+
+首先，常规操作，把所有关键点按照 $dfn$ 序排序，并且加入一个序列 $A$ 。它用来存储虚树中需要有的点。
+
+之后，也是常规操作，在关键点序列上，枚举相邻的两个数，求得 $lca$ 并且加入序列 $A$ 。
+
+之后，将序列 $A$ 按照 $dfn$ 序排序并且去重，无需使用哈希算法。
+
+最后，在序列 $A$ 上，枚举相邻的两个数 $x,y$，求得它们的 $lca$ 并且连接 $lca,y$ 。
+
+时间复杂度 $O(m\log n)$ ，其中 $m$ 为关键点数，$n$ 为总点数。
+
+代码实现：
+
+```cpp
+int dfn[maxn];//存储每个点的 dfs 序
+int h[maxn*2],m;//存储关键点 h ,关键点个数 m,maxn*2 是为了防止爆炸
+bool valid[maxn];//存储是否是关键点
+I len;//记录虚树总点数（加上了虚点）
+void buildVT(){
+	len=m;//未加虚点之前，初始化为 m
+	sort(h+1,h+m+1,cmp_dfn());//cmp_dfn ，按照每个数的 dfn 序排序
+	for(int i=1;i<m;++i){
+		//这里相邻的是 i 和 i+1
+		h[++len]=lca(h[i],h[i+1]);//求得新的节点
+		//这会有很多重复，但是能够保证覆盖虚树上的所有点
+	}sort(h+1,h+len+1,cmp_dfn());//还是按照 dfn 序排序
+	len=unique(h+1,h+len+1,cmp_dfn())-h-1;//去重
+	for(int i=1;i<len;++i){
+		int lca=get_lca(h[i],h[i+1]);
+		conn(lca,h[i+1],path(lca,h[i+1]));//path:路径长度
+		//连接 lca 和 h[i+1]，其中 lca 为父亲节点
+		//显然 lca 在虚树上，所以合法
+		//因为 dfn[h[i]]<dfn[h[i+1]] 可以保证：要么 h[i] 是 h[i+1] 的祖先；
+		//要么 h[i] 不是 h[i+1] 的祖先，但是 h[i+1] 一定不是 h[i] 的祖先
+		//所以这个连接操作不会连接自己，也刚好满足了虚树的路径关系
+	}
+}
+```
+
+这样也能够建立虚树，并且结果是正确的。
+
+---
+
+[P2495 [SDOI2011] 消耗战 - 洛谷 | 计算机科学教育新生态 (luogu.com.cn)](
 
 对于消耗战这题，直接在虚树上跑最开始讲的那个 DP 就行了，我们等于利用了虚树排除了那些没用的非关键节点！仍然考虑 $i$ 的所有儿子 $v$：
 
